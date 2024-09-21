@@ -198,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 searchedProducts[index]['category'].toString(),
                 searchedProducts[index]['image'].toString(),
                 searchedProducts[index]['rating'].toString(),
-                searchedProducts[index]['isFavourite'],
+                searchedProducts[index]['isFavourite'] ?? false,
               );
 
               isSearching = false;
@@ -219,13 +219,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Container(
-                      width: 0.35 * screenWidth,
-                      height: 0.35 * screenWidth,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        image: DecorationImage(
-                          image: NetworkImage(searchedProducts[index]['image']),
+                    Hero(
+                      tag: 'Product ${searchedProducts[index]['title']}',
+                      child: Container(
+                        width: 0.35 * screenWidth,
+                        height: 0.35 * screenWidth,
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          image: DecorationImage(
+                            image:
+                                NetworkImage(searchedProducts[index]['image']),
+                          ),
                         ),
                       ),
                     ),
@@ -247,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           textAlign: TextAlign.left,
                         ),
                         Text(
-                          searchedProducts[index]['price'].toString(),
+                          '\$${searchedProducts[index]['price'].toString()}',
                           style: const TextStyle(
                             fontFamily: 'ClashDisplay',
                             color: Color.fromARGB(255, 0, 0, 0),
