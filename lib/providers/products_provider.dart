@@ -9,6 +9,9 @@ class ProductsProvider extends ChangeNotifier {
     return _productsService.fetchProducts();
   }
 
+  String _productID = '';
+  String get productID => _productID;
+
   String _productTitle = '';
   String get productTitle => _productTitle;
 
@@ -32,6 +35,7 @@ class ProductsProvider extends ChangeNotifier {
 
   Map<String, dynamic> getProductDetails() {
     return {
+      'id': productID,
       'title': productTitle,
       'price': productPrice,
       'description': productDescription,
@@ -42,8 +46,16 @@ class ProductsProvider extends ChangeNotifier {
     };
   }
 
-  void setProductDetails(String title, String price, String description,
-      String category, String image, String rating, bool isFav) {
+  void setProductDetails(
+      String id,
+      String title,
+      String price,
+      String description,
+      String category,
+      String image,
+      String rating,
+      bool isFav) {
+    _productID = id;
     _productTitle = title;
     _productPrice = price;
     _productDescription = description;

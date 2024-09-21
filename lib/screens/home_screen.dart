@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //Lists
   List<dynamic> products = [];
   List<dynamic> searchedProducts = [];
+  List<String> favourites = [];
 
   //Others
   FocusNode? searchFocus = FocusNode();
@@ -192,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final productsProvider =
                   Provider.of<ProductsProvider>(context, listen: false);
               productsProvider.setProductDetails(
+                searchedProducts[index]['id'].toString(),
                 searchedProducts[index]['title'].toString(),
                 searchedProducts[index]['price'].toString(),
                 searchedProducts[index]['description'].toString(),
@@ -365,5 +368,10 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<List<String>> getFavouriteProducts() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('favourite_products') ?? [];
   }
 }

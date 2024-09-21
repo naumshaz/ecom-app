@@ -4,20 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductScreen extends StatefulWidget {
   const ProductScreen({super.key});
 
   @override
-  State<ProductScreen> createState() => _ProductScreenState();
+  State<ProductScreen> createState() => ProductScreenState();
 }
 
-class _ProductScreenState extends State<ProductScreen> {
+class ProductScreenState extends State<ProductScreen> {
   //Maps
   Map<String, dynamic>? product;
 
   //Booleans
   bool isLoading = true;
+  bool isFavourite = false;
 
   //Strings
   String title = '';
@@ -27,10 +29,14 @@ class _ProductScreenState extends State<ProductScreen> {
   String image = '';
   //String rating = '';
 
+  static List<String> favourites = [];
+
   @override
   void initState() {
     super.initState();
     loadProductDetails();
+
+    checkFavourite();
   }
 
   @override
@@ -106,14 +112,26 @@ class _ProductScreenState extends State<ProductScreen> {
                         ),
                       ),
                       Container(
-                        child: product!['isFavourite']
+                        child: isFavourite
                             ? IconButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  setState(() {
+                                    isFavourite = false;
+                                  });
+
+                                  removeProductFromFavourites(product!['id']);
+                                },
                                 icon: const Icon(Icons.favorite),
                                 iconSize: 30,
                               )
                             : IconButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  setState(() {
+                                    isFavourite = true;
+                                  });
+
+                                  addProductToFavourites(product!['id']);
+                                },
                                 icon: const Icon(Icons.favorite_border),
                                 iconSize: 30,
                               ),
@@ -221,5 +239,43 @@ class _ProductScreenState extends State<ProductScreen> {
     setState(() {
       isLoading = true;
     });
+  }
+
+  Future<void> saveFavouriteProducts(List<String> productIds) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('favourite_products', productIds);
+  }
+
+  Future<List<String>> getFavouriteProducts() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('favourite_products') ?? [];
+  }
+
+  void addProductToFavourites(String productId) async {
+    List<String> favouriteProducts = await getFavouriteProducts();
+    if (!favouriteProducts.contains(productId)) {
+      favouriteProducts.add(productId);
+      await saveFavouriteProducts(favouriteProducts);
+    }
+  }
+
+  void removeProductFromFavourites(String productId) async {
+    List<String> favouriteProducts = await getFavouriteProducts();
+    if (favouriteProducts.contains(productId)) {
+      favouriteProducts.remove(productId);
+      await saveFavouriteProducts(favouriteProducts);
+    }
+  }
+
+  void checkFavourite() async {
+    favourites = await getFavouriteProducts();
+    final productsProvider =
+        Provider.of<ProductsProvider>(context, listen: false);
+    product = productsProvider.getProductDetails();
+    if (favourites.contains(product!['id'])) {
+      setState(() {
+        isFavourite = true;
+      });
+    }
   }
 }
