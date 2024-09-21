@@ -43,49 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 240, 240, 240),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text(
-          'NYEH',
-          style: TextStyle(
-            fontFamily: 'ClashDisplay',
-            fontWeight: FontWeight.w500,
-            letterSpacing: 2,
-          ),
-        ),
-        centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 15),
-          child: IconButton(
-              onPressed: () {
-                setState(() {
-                  HapticFeedback.selectionClick();
-                  searchController.text = '';
-                  searchedProducts = products;
-                  isSearching = !isSearching;
-                });
-              },
-              icon: isSearching
-                  ? const Icon(
-                      (Icons.close),
-                    )
-                  : const Icon(Icons.search)),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: IconButton(
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                Navigator.of(context).push(CupertinoPageRoute(
-                    builder: (context) => const FavouritesScreen()));
-              },
-              icon: const Icon(Icons.favorite_border),
-              color: Colors.black,
-            ),
-          )
-        ],
-      ),
+      appBar: appbar(context),
       body: Padding(
         padding:
             const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 25),
@@ -110,6 +68,52 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  AppBar appbar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      title: const Text(
+        'NYEH',
+        style: TextStyle(
+          fontFamily: 'ClashDisplay',
+          fontWeight: FontWeight.w500,
+          letterSpacing: 2,
+        ),
+      ),
+      centerTitle: true,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: IconButton(
+            onPressed: () {
+              setState(() {
+                HapticFeedback.selectionClick();
+                searchController.text = '';
+                searchedProducts = products;
+                isSearching = !isSearching;
+              });
+            },
+            icon: isSearching
+                ? const Icon(
+                    (Icons.close),
+                  )
+                : const Icon(Icons.search)),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 15),
+          child: IconButton(
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              Navigator.of(context).push(CupertinoPageRoute(
+                  builder: (context) => const FavouritesScreen()));
+            },
+            icon: const Icon(Icons.favorite_border),
+            color: Colors.black,
+          ),
+        )
+      ],
     );
   }
 
@@ -147,7 +151,9 @@ class _HomeScreenState extends State<HomeScreen> {
         keyboardAppearance: Brightness.dark,
         focusNode: searchFocus,
         keyboardType: TextInputType.name,
-        onChanged: (value) {},
+        onChanged: (value) {
+          _searchItems(value);
+        },
         style: const TextStyle(
           color: Color.fromARGB(255, 0, 0, 0),
           fontFamily: 'ClashDisplay',
@@ -165,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
-          border: InputBorder.none, // Removes default border
+          border: InputBorder.none,
         ),
       ),
     );
@@ -204,7 +210,8 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             child: Container(
-                padding: const EdgeInsets.only(left: 10, right: 10),
+                padding: const EdgeInsets.only(
+                    left: 10, right: 10, top: 3, bottom: 3),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
                   color: Colors.white,
@@ -322,6 +329,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ));
         });
+  }
+
+  void _searchItems(String query) {
+    List<dynamic> filteredProducts = products.where((item) {
+      return item['title'].toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
+    setState(() {
+      searchedProducts = filteredProducts;
+    });
   }
 
   Future<void> loadProducts() async {
