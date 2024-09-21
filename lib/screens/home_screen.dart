@@ -1,10 +1,12 @@
 import 'package:ecomapp/providers/products_provider.dart';
 import 'package:ecomapp/screens/favourites_screen.dart';
+import 'package:ecomapp/screens/product_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,12 +20,14 @@ class _HomeScreenState extends State<HomeScreen> {
   TextEditingController searchController = TextEditingController();
 
   //Booleans
+  bool isAlwaysLoading = true;
   bool isError = false;
   bool isSearching = false;
+  bool isLoading = true;
 
   //Lists
-  List<Map<String, dynamic>> products = [];
-  List<Map<String, dynamic>> searchedProducts = [];
+  List<dynamic> products = [];
+  List<dynamic> searchedProducts = [];
 
   //Others
   FocusNode? searchFocus = FocusNode();
@@ -36,8 +40,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 240, 240, 240),
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Text(
           'NYEH',
           style: TextStyle(
@@ -80,15 +87,25 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
+        padding:
+            const EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 25),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             AnimatedOpacity(
               opacity: isSearching ? 1 : 0,
-              duration: const Duration(milliseconds: 700),
+              duration: const Duration(milliseconds: 1500),
               child: isSearching ? searchBar() : Container(),
+            ),
+            isSearching
+                ? const SizedBox(
+                    height: 10,
+                  )
+                : Container(),
+            Expanded(
+              child:
+                  isLoading ? fakeGrids(screenWidth) : actualGrids(screenWidth),
             ),
           ],
         ),
@@ -99,6 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Container searchBar() {
     return Container(
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(50),
         border: const Border(
           top: BorderSide(
@@ -153,22 +171,178 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  GridView actualGrids(double screenWidth) {
+    return GridView.builder(
+        padding: const EdgeInsets.only(top: 10, left: 0, right: 0),
+        itemCount: searchedProducts.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 15,
+            mainAxisSpacing: 15,
+            childAspectRatio: 1 / 1.3),
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              final productsProvider =
+                  Provider.of<ProductsProvider>(context, listen: false);
+              productsProvider.setProductDetails(
+                searchedProducts[index]['title'].toString(),
+                searchedProducts[index]['price'].toString(),
+                searchedProducts[index]['description'].toString(),
+                searchedProducts[index]['category'].toString(),
+                searchedProducts[index]['image'].toString(),
+                searchedProducts[index]['rating'].toString(),
+                searchedProducts[index]['isFavourite'],
+              );
+
+              isSearching = false;
+
+              Navigator.of(context).push(
+                CupertinoPageRoute(
+                  builder: (context) => ProductScreen(),
+                ),
+              );
+            },
+            child: Container(
+                padding: const EdgeInsets.only(left: 10, right: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Container(
+                      width: 0.35 * screenWidth,
+                      height: 0.35 * screenWidth,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        image: DecorationImage(
+                          image: NetworkImage(searchedProducts[index]['image']),
+                        ),
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          searchedProducts[index]['title'].split(' ')[0] +
+                              ' ' +
+                              searchedProducts[index]['title'].split(' ')[1] +
+                              ' ' +
+                              searchedProducts[index]['title'].split(' ')[2],
+                          style: const TextStyle(
+                            fontFamily: 'ClashDisplay',
+                            color: Color.fromARGB(255, 0, 0, 0),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                        Text(
+                          searchedProducts[index]['price'].toString(),
+                          style: const TextStyle(
+                            fontFamily: 'ClashDisplay',
+                            color: Color.fromARGB(255, 0, 0, 0),
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ],
+                    ),
+                  ],
+                )),
+          );
+        });
+  }
+
+  GridView fakeGrids(double screenWidth) {
+    return GridView.builder(
+        padding: const EdgeInsets.only(top: 10, left: 0, right: 0),
+        itemCount: 8,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 15,
+            mainAxisSpacing: 15,
+            childAspectRatio: 1 / 1.3),
+        itemBuilder: (context, index) {
+          return Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  color: Color.fromARGB(255, 255, 255, 255)),
+              child: Skeletonizer(
+                effect: const ShimmerEffect(
+                    baseColor: Color.fromARGB(255, 230, 230, 230),
+                    highlightColor: Color.fromARGB(255, 210, 210, 210),
+                    duration: Duration(milliseconds: 1200),
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight),
+                containersColor: const Color.fromARGB(255, 35, 35, 35),
+                ignoreContainers: false,
+                enabled: isAlwaysLoading,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Container(
+                      width: 0.35 * screenWidth,
+                      height: 0.35 * screenWidth,
+                      decoration: const BoxDecoration(
+                        image: const DecorationImage(
+                          image: NetworkImage(
+                            'https://i.sstatic.net/mwFzF.png',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Men's T-Shirt Wear",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.start,
+                        ),
+                        Text(
+                          'Full Price',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w300,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.start,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ));
+        });
+  }
+
   Future<void> loadProducts() async {
+    setState(() {
+      isLoading = true;
+    });
     final productsProvider =
         Provider.of<ProductsProvider>(context, listen: false);
     final response = await productsProvider.getProducts();
-
-    if (response['message'] != null) {
+    if (response[0]['message'] != null) {
       setState(() {
         isError = true;
       });
     } else {
       setState(() {
-        products = (response['data'] as List)
-            .map((item) => item as Map<String, dynamic>)
-            .toList();
+        products = response;
         searchedProducts = products;
       });
     }
+    setState(() {
+      isLoading = false;
+    });
   }
 }

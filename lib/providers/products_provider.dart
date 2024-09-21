@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class ProductsProvider extends ChangeNotifier {
   final ProductsService _productsService = ProductsService();
 
-  Future<Map<String, dynamic>> getProducts() async {
+  Future<List<dynamic>> getProducts() async {
     return _productsService.fetchProducts();
   }
 
